@@ -1,79 +1,74 @@
-import { useState } from 'react';
-import type { Unit } from './types/weather';
-import { useWeather } from './hooks/useWeather';
-import SearchBar from './components/SearchBar';
-import UnitToggle from './components/UnitToggle';
+import Attribution from './components/Attribution';
+import CityResults from './components/CityResults';
 import CurrentWeather from './components/CurrentWeather';
 import ForecastList from './components/ForecastList';
-import LoadingState from './components/states/LoadingState';
-import ErrorState from './components/states/ErrorState';
-import EmptyState from './components/states/EmptyState';
+import QueryStatus from './components/QueryStatus';
+import SearchForm from './components/SearchForm';
+import UnitToggle from './components/UnitToggle';
+import { useWeatherApp } from './hooks/useWeatherApp';
 
-/**
- * WeatherView — aplicação completa de previsão do tempo.
- *
- * Construída ao longo do treinamento de Spec-Driven Development com GitHub
- * Copilot, do briefing à entrega.
- */
 export default function App() {
-  const { status, data, error, query, search, retry } = useWeather();
-  const [unit, setUnit] = useState<Unit>('celsius');
+  const weatherApp = useWeatherApp();
+  const cities = weatherApp.search.status === 'success' ? weatherApp.search.data : [];
 
   return (
-    <div className="min-h-screen text-white">
-      <header className="border-b border-white/10">
-        <div className="mx-auto flex max-w-5xl flex-col gap-4 px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-center gap-2">
-            <span aria-hidden="true" className="text-2xl text-sun">
-              ☀️
-            </span>
-            <span className="text-lg font-bold">WeatherView</span>
-          </div>
-          <div className="flex items-center gap-3">
-            <SearchBar onSearch={search} disabled={status === 'loading'} />
-            <UnitToggle unit={unit} onChange={setUnit} />
-          </div>
-        </div>
-      </header>
+    <main className="min-h-screen bg-night-900 px-4 py-8 text-white sm:px-6 lg:px-8">
+      <div className="mx-auto flex w-full max-w-5xl flex-col gap-8">
+        <header className="space-y-2">
+          <h1 className="text-2xl font-semibold">Weather App</h1>
+          <p className="text-sm text-white/70">Consulte o clima da cidade que você escolher.</p>
+        </header>
 
-      <main className="mx-auto max-w-5xl space-y-8 px-4 py-8">
-        {status === 'idle' && (
-          <EmptyState
-            title="Busque uma cidade para começar"
-            hint="Ex.: Seattle, Lisboa, São Paulo…"
+        <section aria-label="Buscar cidade" className="space-y-4">
+          <SearchForm
+            query={weatherApp.query}
+            queryError={weatherApp.queryError}
+            isLoading={weatherApp.search.status === 'loading'}
+            onQueryChange={weatherApp.setQuery}
+            onSubmit={weatherApp.submitSearch}
           />
-        )}
-
-        {status === 'loading' && <LoadingState />}
-
-        {status === 'empty' && (
-          <EmptyState
-            title={`Nenhuma cidade encontrada para "${query}"`}
-            hint="Verifique a grafia e tente novamente."
+          <QueryStatus
+            search={weatherApp.search}
+            weather={weatherApp.weather}
+            onRetrySearch={weatherApp.retrySearch}
+            onRetryForecast={weatherApp.retryForecast}
           />
+          {weatherApp.search.status === 'success' && (
+            <CityResults cities={cities} onSelectCity={weatherApp.selectCity} />
+          )}
+        </section>
+
+        {weatherApp.selectedCity !== null && (
+          <section aria-label="Clima da cidade selecionada" className="space-y-6">
+            <header>
+              <h2 className="text-xl font-semibold">{weatherApp.selectedCity.name}</h2>
+              <p className="text-sm text-white/70">
+                {[weatherApp.selectedCity.admin1, weatherApp.selectedCity.country]
+                  .filter((detail): detail is string => detail !== null)
+                  .join(', ')}
+              </p>
+            </header>
+            <UnitToggle unit={weatherApp.unit} onUnitChange={weatherApp.setUnit} />
+            {weatherApp.weather.status === 'success' && (
+              <>
+                <CurrentWeather
+                  current={weatherApp.weather.data.current}
+                  fetchedAt={weatherApp.weather.data.fetchedAt}
+                  timezone={weatherApp.weather.data.timezone}
+                  unit={weatherApp.unit}
+                />
+                <ForecastList
+                  forecast={weatherApp.weather.data.forecast}
+                  timezone={weatherApp.weather.data.timezone}
+                  unit={weatherApp.unit}
+                />
+              </>
+            )}
+          </section>
         )}
 
-        {status === 'error' && error && <ErrorState message={error} onRetry={retry} />}
-
-        {status === 'success' && data && (
-          <>
-            <CurrentWeather city={data.city} current={data.current} unit={unit} />
-            <ForecastList forecast={data.forecast} unit={unit} />
-          </>
-        )}
-      </main>
-
-      <footer className="py-8 text-center text-sm text-white/40">
-        Dados por{' '}
-        <a
-          href="https://open-meteo.com/"
-          target="_blank"
-          rel="noreferrer"
-          className="text-accent-400 hover:underline"
-        >
-          Open-Meteo
-        </a>
-      </footer>
-    </div>
+        <Attribution />
+      </div>
+    </main>
   );
 }

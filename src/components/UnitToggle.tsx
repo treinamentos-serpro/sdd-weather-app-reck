@@ -2,37 +2,37 @@ import type { Unit } from '../types/weather';
 
 interface UnitToggleProps {
   unit: Unit;
-  onChange: (unit: Unit) => void;
+  onUnitChange: (unit: Unit) => void;
 }
 
-/** Alternador de unidade Celsius/Fahrenheit, acessível por teclado. */
-export default function UnitToggle({ unit, onChange }: UnitToggleProps) {
+export default function UnitToggle({ unit, onUnitChange }: UnitToggleProps) {
   return (
-    <div
-      role="group"
-      aria-label="Unidade de temperatura"
-      className="inline-flex rounded-lg border border-white/10 bg-white/5 p-1 backdrop-blur-md"
-    >
-      <button
-        type="button"
-        aria-pressed={unit === 'celsius'}
-        onClick={() => onChange('celsius')}
-        className={`rounded-md px-3 py-1 text-sm font-semibold transition ${
-          unit === 'celsius' ? 'bg-accent-500 text-white' : 'text-white/60 hover:text-white'
-        }`}
-      >
-        °C
-      </button>
-      <button
-        type="button"
-        aria-pressed={unit === 'fahrenheit'}
-        onClick={() => onChange('fahrenheit')}
-        className={`rounded-md px-3 py-1 text-sm font-semibold transition ${
-          unit === 'fahrenheit' ? 'bg-accent-500 text-white' : 'text-white/60 hover:text-white'
-        }`}
-      >
-        °F
-      </button>
-    </div>
+    <fieldset className="inline-flex flex-col gap-2">
+      <legend className="text-sm font-medium text-white">Unidade de temperatura</legend>
+      <div className="inline-flex w-fit rounded-md border border-white/15 bg-night-800 p-1">
+        <button
+          type="button"
+          aria-label="Celsius"
+          aria-pressed={unit === 'celsius'}
+          className={`min-h-10 min-w-12 rounded px-3 text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-400 ${
+            unit === 'celsius' ? 'bg-accent-500 text-night-900' : 'text-white hover:bg-white/10'
+          }`}
+          onClick={() => onUnitChange('celsius')}
+        >
+          °C
+        </button>
+        <button
+          type="button"
+          aria-label="Fahrenheit"
+          aria-pressed={unit === 'fahrenheit'}
+          className={`min-h-10 min-w-12 rounded px-3 text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-400 ${
+            unit === 'fahrenheit' ? 'bg-accent-500 text-night-900' : 'text-white hover:bg-white/10'
+          }`}
+          onClick={() => onUnitChange('fahrenheit')}
+        >
+          °F
+        </button>
+      </div>
+    </fieldset>
   );
 }
